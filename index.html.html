@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> INVENTARIO DE ABARROTES "MUELLE 11"</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-rose-500 selection:text-white">
+
+    <header class="bg-[#111827] border-b border-gray-800 px-4 lg:px-8 py-4 sticky top-0 z-30 shadow-md">
+        <div class="max-w-[95rem] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- Branding -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold tracking-wide text-white"> INVENTARIO DE ABARROTES "MUELLE 11"</h1>
+                        <span class="bg-rose-900/60 text-rose-300 border border-rose-700/50 text-xs px-2.5 py-0.5 rounded-full font-medium">Estilo Excel</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-0.5">Control inteligente de inventario y stock </p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs / Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2 lg:gap-3 w-full md:w-auto justify-end">
+                <button onclick="switchTab('inventario')" id="btn-tab-inventario" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-rose-600 text-white shadow-lg shadow-rose-900/30 transition-all hover:bg-rose-500">
+                    <i class="fa-solid fa-boxes-stacked"></i> Inventario
+                </button>
+                <button onclick="switchTab('entradas')" id="btn-tab-entradas" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#1f2937] text-gray-300 hover:bg-[#374151] transition-all border border-gray-700">
+                    <i class="fa-solid fa-arrow-down-long"></i> Entradas
+                </button>
+                <button onclick="switchTab('salidas')" id="btn-tab-salidas" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#1f2937] text-gray-300 hover:bg-[#374151] transition-all border border-gray-700">
+                    <i class="fa-solid fa-arrow-up-long"></i> Salidas
+                </button>
+
+                <div class="h-6 w-[1px] bg-gray-700 hidden lg:block mx-1"></div>
+
+                <button onclick="openModal('modalNuevoArticulo')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition-all">
+                    <i class="fa-solid fa-plus"></i> Nuevo Artículo
+                </button>
+                <button onclick="openModal('modalEntrada')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all">
+                    <i class="fa-solid fa-cart-shopping"></i> Registrar Entrada
+                </button>
+                <button onclick="openModal('modalSalida')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-500 text-white shadow-md transition-all">
+                    <i class="fa-solid fa-utensils"></i> Registrar Salida
+                </button>
+                <button onclick="exportarExcel()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all" title="Exportar CSV/Excel">
+                    <i class="fa-solid fa-file-excel"></i> <span class="hidden xl:inline">Exportar Excel</span>
+                </button>
+                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all cursor-pointer" title="Importar CSV (Delimitado por comas)">
+                    <i class="fa-solid fa-file-import"></i> <span class="hidden xl:inline">Importar CSV</span>
+                    <input type="file" id="csvFileInput" accept=".csv" onchange="importarCSV(event)" class="hidden">
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[95rem] mx-auto px-4 lg:px-8 py-6 w-full flex-grow">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Total Referencias -->
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 w-24 h-24 bg-rose-500/5 rounded-full blur-xl pointer-events-none"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Referencias</p>
+                    <h3 id="stat-referencias" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-gray-800 border border-gray-700/60 rounded-xl flex items-center justify-center text-rose-400 text-xl shadow-inner">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+            </div>
+
+            <!-- Stock Total Unidades -->
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Stock Total Unidades</p>
+                    <h3 id="stat-stock" class="text-3xl font-extrabold text-emerald-400 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-gray-800 border border-gray-700/60 rounded-xl flex items-center justify-center text-emerald-400 text-xl shadow-inner">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+            </div>
+
+            <!-- Valor Estimado Inventario -->
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Valor Estimado Inventario</p>
+                    <h3 id="stat-valor" class="text-3xl font-extrabold text-purple-400 mt-1">$0.00</h3>
+                </div>
+                <div class="w-12 h-12 bg-gray-800 border border-gray-700/60 rounded-xl flex items-center justify-center text-purple-400 text-xl shadow-inner">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-content-inventario" class="tab-pane">
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="inputBuscar" oninput="filtrarInventario()" placeholder="Buscar por nombre..." 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 transition-colors">
+                </div>
+
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <button onclick="reiniciarDatos()" class="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-red-950/40 text-rose-400 border border-rose-900/40 rounded-lg text-sm font-semibold transition-all shadow-sm whitespace-nowrap">
+                        <i class="fa-solid fa-rotate-right"></i> Reiniciar Datos
+                    </button>
+                    <button onclick="eliminarTodoInventarioConPin()" class="flex items-center gap-2 px-4 py-2.5 bg-red-950/30 hover:bg-red-900/40 text-red-400 border border-red-800/50 rounded-lg text-sm font-semibold transition-all shadow-sm whitespace-nowrap" title="Borrar todo el inventario de artículos">
+                        <i class="fa-solid fa-trash-can"></i> Eliminar Inventario
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-[#111827] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+                <div class="bg-[#161f31] px-6 py-3 border-b border-gray-800 flex justify-between items-center">
+                    <span class="text-xs font-bold tracking-wider text-gray-400 uppercase">Inventario Actual con Desglose de Salidas por Área</span>
+                    <span class="text-xs text-gray-400 italic"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Compras y salidas por área se calculan automáticamente desde sus historiales</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase bg-[#0d1320]">
+                                <th class="py-3.5 px-5">Nombre</th>
+                                <th class="py-3.5 px-3 text-center">UDM</th>
+                                <th class="py-3.5 px-3 text-center">Inicio Mes</th>
+                                <th class="py-3.5 px-3 text-center text-emerald-400">Compras</th>
+                                <th class="py-3.5 px-3 text-center text-amber-400">Total Salidas</th>
+                                <th class="py-3.5 px-3 text-center text-amber-300/80">Salidas Cocina</th>
+                                <th class="py-3.5 px-3 text-center text-amber-300/80">Salidas Barra</th>
+                                <th class="py-3.5 px-3 text-center text-amber-300/80">Salidas Loza/Piso</th>
+                                <th class="py-3.5 px-3 text-center text-purple-300/80">Salidas Sucursales</th>
+                                <th class="py-3.5 px-3 text-center text-cyan-400">Stock Actual</th>
+                                <th class="py-3.5 px-3 text-right">Precio Unit.</th>
+                                <th class="py-3.5 px-3 text-right">Total Valor</th>
+                                <th class="py-3.5 px-5 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inventario-body" class="divide-y divide-gray-800 text-sm">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-content-entradas" class="tab-pane hidden">
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="inputBuscarEntradas" oninput="renderizarEntradas()" placeholder="Filtrar entradas..." 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <button onclick="limpiarEntradasConPin()" class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-rose-950/40 text-rose-400 border border-rose-900/40 rounded-lg text-sm font-semibold transition-all">
+                    <i class="fa-solid fa-trash-can"></i> Limpiar Todo (PIN)
+                </button>
+            </div>
+
+            <div class="bg-[#111827] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+                <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-down-long text-emerald-400"></i> Historial Completo de Entradas
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-0.5">Diferenciación y resumen por día (Requiere PIN de autorización para editar o eliminar)</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase bg-[#0d1320]">
+                                <th class="py-3.5 px-6">Fecha / Día</th>
+                                <th class="py-3.5 px-4">Artículo</th>
+                                <th class="py-3.5 px-4 text-center">Cantidad</th>
+                                <th class="py-3.5 px-4 text-right">Costo Unit.</th>
+                                <th class="py-3.5 px-4 text-right">Costo Total</th>
+                                <th class="py-3.5 px-6 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-entradas-body" class="divide-y divide-gray-800 text-sm">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-content-salidas" class="tab-pane hidden">
+            <div class="bg-[#111827] border border-gray-800 rounded-xl p-4 mb-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="inputBuscarSalidas" oninput="renderizarSalidas()" placeholder="Filtrar salidas..." 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 transition-colors">
+                </div>
+                <button onclick="limpiarSalidasConPin()" class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-rose-950/40 text-rose-400 border border-rose-900/40 rounded-lg text-sm font-semibold transition-all">
+                    <i class="fa-solid fa-trash-can"></i> Limpiar Todo (PIN)
+                </button>
+            </div>
+
+            <div class="bg-[#111827] border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+                <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-up-long text-amber-400"></i> Historial Completo de Salidas
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-0.5">Diferenciación y resumen por día (Requiere PIN de autorización para editar o eliminar)</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase bg-[#0d1320]">
+                                <th class="py-3.5 px-6">Fecha / Día</th>
+                                <th class="py-3.5 px-4">Artículo</th>
+                                <th class="py-3.5 px-4 text-center">Cantidad</th>
+                                <th class="py-3.5 px-4">Área de Destino</th>
+                                <th class="py-3.5 px-6 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-salidas-body" class="divide-y divide-gray-800 text-sm">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Nuevo Artículo -->
+    <div id="modalNuevoArticulo" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-plus text-rose-500"></i> Agregar Nuevo Artículo</h3>
+                <button onclick="closeModal('modalNuevoArticulo')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="guardarNuevoArticulo(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Nombre del Artículo / Ingrediente</label>
+                    <input type="text" id="nuevoNombre" required placeholder="Ej. ACEITE DE CANOLA AEROSOL" 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">UDM (Unidad de Medida)</label>
+                        <select id="nuevoUdm" required 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 cursor-pointer">
+                            <option value="PIEZA">PIEZA</option>
+                            <option value="BIDON">BIDON</option>
+                            <option value="PAQUETE">PAQUETE</option>
+                            <option value="CAJA">CAJA</option>
+                            <option value="BOTELLA">BOTELLA</option>
+                            <option value="KG">KG</option>
+                            <option value="LITRO">LITRO</option>
+                            <option value="COSTAL">COSTAL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Inicio de Mes</label>
+                        <input type="number" id="nuevoInicioMes" required min="0" value="5" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Stock Actual</label>
+                        <input type="number" id="nuevoStock" required min="0" value="5" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Precio Unitario ($)</label>
+                        <input type="number" id="nuevoPrecio" required min="0" step="0.01" value="120.00" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Fecha de Entrada</label>
+                    <input type="date" id="nuevoFechaEntrada" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalNuevoArticulo')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all">Guardar Artículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Registrar Entrada -->
+    <div id="modalEntrada" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-emerald-500"></i> Registrar Compra / Entrada</h3>
+                <button onclick="closeModal('modalEntrada')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="registrarEntradaStock(event)" class="p-6 space-y-4">
+                <!-- Búsqueda inteligente con desplegable tipo autocomplete -->
+                <div class="relative">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Buscar y Seleccionar Artículo</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="busquedaEntradaInput" oninput="filtrarArticulosEntrada()" onfocus="mostrarDropdownEntrada()" placeholder="Escribe para buscar producto..." 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <!-- Desplegable flotante estilo autocomplete -->
+                    <div id="dropdownEntradaList" class="absolute left-0 right-0 mt-1 bg-[#161f31] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-gray-800">
+                        <!-- Populated by JS -->
+                    </div>
+                    <input type="hidden" id="entradaArticuloId" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Fecha de Compra / Entrada</label>
+                    <input type="date" id="entradaFechaInput" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Cantidad a Añadir</label>
+                    <input type="number" id="entradaCantidad" required min="1" value="10" 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Costo Unitario (Automático del Inventario) ($)</label>
+                    <input type="number" id="entradaCosto" required disabled step="0.01" 
+                        class="w-full bg-[#1f2937]/50 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed">
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalEntrada')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all">Añadir al Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Registrar Salida -->
+    <div id="modalSalida" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-utensils text-amber-500"></i> Registrar Salida / Consumo</h3>
+                <button onclick="closeModal('modalSalida')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="registrarSalidaStock(event)" class="p-6 space-y-4">
+                <!-- Búsqueda inteligente con desplegable tipo autocomplete -->
+                <div class="relative">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Buscar y Seleccionar Artículo</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="busquedaSalidaInput" oninput="filtrarArticulosSalida()" onfocus="mostrarDropdownSalida()" placeholder="Escribe para buscar producto..." 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <!-- Desplegable flotante estilo autocomplete -->
+                    <div id="dropdownSalidaList" class="absolute left-0 right-0 mt-1 bg-[#161f31] border border-gray-700 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-gray-800">
+                        <!-- Populated by JS -->
+                    </div>
+                    <input type="hidden" id="salidaArticuloId" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Cantidad a Retirar</label>
+                        <input type="number" id="salidaCantidad" required min="1" value="1" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destino / Tipo</label>
+                        <select id="tipoSalidaSelect" onchange="toggleTipoSalidaDestino()" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                            <option value="AREA">Área Interna</option>
+                            <option value="SUCURSAL">Franquicia / Sucursal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Campo dinámico para área interna -->
+                <div id="grupoAreaInterna">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Área de Destino</label>
+                    <select id="salidaArea" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                        <option value="COCINA">COCINA</option>
+                        <option value="BARRA">BARRA</option>
+                        <option value="LOZA/PISO">LOZA/PISO</option>
+                    </select>
+                </div>
+
+                <!-- Campo dinámico para Sucursal (Franquicia) -->
+                <div id="grupoSucursal" class="hidden">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Seleccionar Sucursal</label>
+                    <select id="salidaSucursal" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                        <option value="Merkadito">Merkadito</option>
+                        <option value="Punta Corcho">Punta Corcho</option>
+                        <option value="Buba">Buba</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Fecha de Salida</label>
+                    <input type="date" id="salidaFechaInput" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalSalida')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-500 text-white shadow-lg transition-all">Confirmar Salida</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal PIN Authorization -->
+    <div id="modalPin" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 text-center p-6">
+            <div class="w-12 h-12 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="font-bold text-white text-lg mb-1">Autorización PIN Requerida</h3>
+            <p id="pinDescripcion" class="text-xs text-gray-400 mb-5">Ingrese el PIN de seguridad autorizado</p>
+            
+            <form onsubmit="verificarPin(event)">
+                <input type="password" id="inputPin" required maxlength="6" autofocus placeholder="••••" 
+                    class="w-36 mx-auto bg-[#1f2937] border border-gray-700 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-white mb-6 focus:outline-none focus:border-rose-500">
+                
+                <div class="flex justify-center gap-3">
+                    <button type="button" onclick="closeModal('modalPin')" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors w-full">Cancelar</button>
+                    <button type="submit" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all w-full">Autorizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Entrada -->
+    <div id="modalEditarEntrada" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-emerald-500"></i> Editar Registro de Entrada</h3>
+                <button onclick="closeModal('modalEditarEntrada')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="guardarEdicionEntrada(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editEntradaId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Artículo</label>
+                    <input type="text" id="editEntradaArticulo" disabled 
+                        class="w-full bg-[#1f2937]/60 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Cantidad</label>
+                        <input type="number" id="editEntradaCantidad" required min="1" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Costo Unitario ($)</label>
+                        <input type="number" id="editEntradaCosto" required min="0" step="0.01" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Fecha</label>
+                    <input type="text" id="editEntradaFecha" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalEditarEntrada')" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all">Guardar Cambios con PIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Salida -->
+    <div id="modalEditarSalida" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-amber-500"></i> Editar Registro de Salida</h3>
+                <button onclick="closeModal('modalEditarSalida')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="guardarEdicionSalida(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editSalidaId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Artículo</label>
+                    <input type="text" id="editSalidaArticulo" disabled 
+                        class="w-full bg-[#1f2937]/60 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Cantidad</label>
+                        <input type="number" id="editSalidaCantidad" required min="1" 
+                            class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destino / Tipo</label>
+                        <select id="editTipoSalidaSelect" onchange="toggleEditTipoSalidaDestino()" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                            <option value="AREA">Área Interna</option>
+                            <option value="SUCURSAL">Franquicia / Sucursal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="editGrupoAreaInterna">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Área de Destino</label>
+                    <select id="editSalidaArea" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                        <option value="COCINA">COCINA</option>
+                        <option value="BARRA">BARRA</option>
+                        <option value="LOZA/PISO">LOZA/PISO</option>
+                    </select>
+                </div>
+
+                <div id="editGrupoSucursal" class="hidden">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Seleccionar Sucursal</label>
+                    <select id="editSalidaSucursal" class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 cursor-pointer">
+                        <option value="Merkadito">Merkadito</option>
+                        <option value="Punta Corcho">Punta Corcho</option>
+                        <option value="Buba">Buba</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Fecha</label>
+                    <input type="text" id="editSalidaFecha" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalEditarSalida')" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-500 text-white shadow-lg transition-all">Guardar Cambios con PIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Nombre Artículo -->
+    <div id="modalEditarNombreArticulo" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-[#161f31] px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-rose-500"></i> Editar Nombre del Artículo</h3>
+                <button onclick="closeModal('modalEditarNombreArticulo')" class="text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="guardarNombreArticuloConPin(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editArticuloId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Nuevo Nombre del Artículo</label>
+                    <input type="text" id="editArticuloNombreInput" required 
+                        class="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500">
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeModal('modalEditarNombreArticulo')" class="px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all">Guardar con PIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 bg-[#1f2937] border border-gray-700 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 translate-y-24 opacity-0 transition-all duration-300">
+        <div id="toastIcon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <h5 id="toastTitle" class="text-sm font-bold">¡Operación Exitosa!</h5>
+            <p id="toastMessage" class="text-xs text-gray-300">Los datos se han actualizado correctamente.</p>
+        </div>
+    </div>
+
+    <footer class="bg-[#111827] border-t border-gray-800 py-4 px-6 text-center text-xs text-gray-500">
+        <p>Control de Inventario de Cocina • PIN Security & Excel-Like Editor &bull; 2026</p>
+    </footer>
+
+    <script>
+        // Seed data & LocalStorage with UDM
+        const datosIniciales = [
+            { id: 1, nombre: "ACEITE CANOLA AEROSOL 170GR", udm: "PIEZA", inicioMes: 10, stock: 12, precio: 85.00 },
+            { id: 2, nombre: "ACEITE DE AJONJOLI EXTRA VIRGEN INES 250ML", udm: "PIEZA", inicioMes: 5, stock: 5, precio: 145.00 },
+            { id: 3, nombre: "ACEITE DE OLIVA NOVELDA 5LT", udm: "PIEZA", inicioMes: 3, stock: 3, precio: 750.00 },
+            { id: 4, nombre: "ACEITE VEGETAL 20L", udm: "BIDON", inicioMes: 4, stock: 4, precio: 980.00 },
+            { id: 5, nombre: "AGUA HETHE MINERAL 750ML 12UND", udm: "CAJA", inicioMes: 15, stock: 15, precio: 420.00 }
+        ];
+
+        let inventario = JSON.parse(localStorage.getItem('kitchen_inventario')) || datosIniciales;
+        let entradas = JSON.parse(localStorage.getItem('kitchen_entradas')) || [
+            { id: 101, fecha: "18/08/2026", articulo: "ACEITE CANOLA AEROSOL 170GR", cantidad: 12, costo: 85.00 }
+        ];
+        let salidas = JSON.parse(localStorage.getItem('kitchen_salidas')) || [];
+
+        let pinCallback = null;
+        const PIN_SECRETO = "1324";
+
+        window.onload = function() {
+            renderizarTodo();
+        };
+
+        function guardarEnLocalStorage() {
+            localStorage.setItem('kitchen_inventario', JSON.stringify(inventario));
+            localStorage.setItem('kitchen_entradas', JSON.stringify(entradas));
+            localStorage.setItem('kitchen_salidas', JSON.stringify(salidas));
+        }
+
+        function renderizarTodo() {
+            renderizarInventario();
+            renderizarEntradas();
+            renderizarSalidas();
+            actualizarMetricas();
+            poblarFiltrosYSelects();
+        }
+
+        function renderizarInventario(lista = inventario) {
+            const tbody = document.getElementById('tabla-inventario-body');
+            tbody.innerHTML = '';
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center py-8 text-gray-500 italic">No se encontraron artículos en el inventario.</td></tr>`;
+                return;
+            }
+
+            lista.forEach((item) => {
+                const nombreItem = item.nombre.trim().toUpperCase();
+
+                // Calcular totales de compras desde el historial de entradas para este artículo
+                const totalCompras = entradas
+                    .filter(e => e.articulo.trim().toUpperCase() === nombreItem)
+                    .reduce((acc, curr) => acc + Number(curr.cantidad), 0);
+
+                // Calcular salidas desglosadas por área y sucursales
+                const salidasCocina = salidas
+                    .filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && (s.area || '').toUpperCase() === 'COCINA')
+                    .reduce((acc, curr) => acc + Number(curr.cantidad), 0);
+
+                const salidasBarra = salidas
+                    .filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && (s.area || '').toUpperCase() === 'BARRA')
+                    .reduce((acc, curr) => acc + Number(curr.cantidad), 0);
+
+                const salidasLoza = salidas
+                    .filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && ((s.area || '').toUpperCase() === 'LOZA/PISO' || (s.area || '').toUpperCase() === 'LOZA' || (s.area || '').toUpperCase() === 'PISO'))
+                    .reduce((acc, curr) => acc + Number(curr.cantidad), 0);
+
+                const salidasSucursales = salidas
+                    .filter(s => s.articulo.trim().toUpperCase() === nombreItem && s.esSucursal)
+                    .reduce((acc, curr) => acc + Number(curr.cantidad), 0);
+
+                const totalSalidas = salidasCocina + salidasBarra + salidasLoza + salidasSucursales;
+
+                // Stock actual calculado automáticamente de forma estricta (Inicio de Mes + Compras - Salidas Totales)
+                const inicioMesVal = item.inicioMes !== undefined ? Number(item.inicioMes) : 0;
+                const stockCalculado = inicioMesVal + totalCompras - totalSalidas;
+                
+                // Actualizar propiedad stock del item automáticamente
+                item.stock = stockCalculado;
+
+                const totalValor = (stockCalculado * Number(item.precio)).toFixed(2);
+                const udmVal = item.udm || 'PIEZA';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#161f31]/60 transition-colors group";
+                tr.innerHTML = `
+                    <td class="py-3 px-5 font-medium text-white">
+                        <div class="flex items-center justify-between gap-2">
+                            <span>${escapeHTML(item.nombre)}</span>
+                            <button onclick="abrirModalEditarNombre(${item.id})" class="text-gray-500 hover:text-rose-400 p-1 rounded transition-all" title="Editar Nombre"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <select onchange="solicitarPinEdicionArticulo(${item.id}, 'udm', this.value, this)" 
+                            class="bg-[#1f2937]/50 border border-gray-700 hover:border-gray-600 focus:border-rose-500 rounded px-2 py-1 text-xs font-semibold text-rose-300 transition-all outline-none cursor-pointer">
+                            <option value="PIEZA" ${udmVal === 'PIEZA' ? 'selected' : ''}>PIEZA</option>
+                            <option value="BIDON" ${udmVal === 'BIDON' ? 'selected' : ''}>BIDON</option>
+                            <option value="PAQUETE" ${udmVal === 'PAQUETE' ? 'selected' : ''}>PAQUETE</option>
+                            <option value="CAJA" ${udmVal === 'CAJA' ? 'selected' : ''}>CAJA</option>
+                            <option value="BOTELLA" ${udmVal === 'BOTELLA' ? 'selected' : ''}>BOTELLA</option>
+                            <option value="KG" ${udmVal === 'KG' ? 'selected' : ''}>KG</option>
+                            <option value="LITRO" ${udmVal === 'LITRO' ? 'selected' : ''}>LITRO</option>
+                            <option value="COSTAL" ${udmVal === 'COSTAL' ? 'selected' : ''}>COSTAL</option>
+                        </select>
+                    </td>
+                    <td class="py-3 px-3 text-center text-gray-300">
+                        <input type="number" value="${inicioMesVal}" min="0" onchange="actualizarInicioMesDirecto(${item.id}, Number(this.value))" 
+                            class="bg-[#1f2937]/30 border border-gray-700 hover:border-gray-600 focus:border-rose-500 rounded px-2 py-1 w-16 text-center text-gray-300 transition-all outline-none">
+                    </td>
+                    <td class="py-3 px-3 text-center font-bold text-emerald-400">
+                        +${totalCompras}
+                    </td>
+                    <td class="py-3 px-3 text-center font-bold text-amber-400">
+                        -${totalSalidas}
+                    </td>
+                    <td class="py-3 px-3 text-center text-amber-300 font-semibold">
+                        ${salidasCocina > 0 ? '-' + salidasCocina : '0'}
+                    </td>
+                    <td class="py-3 px-3 text-center text-amber-300 font-semibold">
+                        ${salidasBarra > 0 ? '-' + salidasBarra : '0'}
+                    </td>
+                    <td class="py-3 px-3 text-center text-amber-300 font-semibold">
+                        ${salidasLoza > 0 ? '-' + salidasLoza : '0'}
+                    </td>
+                    <td class="py-3 px-3 text-center text-purple-300 font-semibold">
+                        ${salidasSucursales > 0 ? '-' + salidasSucursales : '0'}
+                    </td>
+                    <td class="py-3 px-3 text-center font-bold text-cyan-400">
+                        <span class="bg-[#1f2937]/50 border border-gray-700/60 px-3 py-1 rounded-md text-cyan-400 font-bold" title="Cálculo automático">${stockCalculado}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right text-gray-300">
+                        <div class="flex items-center justify-end gap-1">
+                            <span class="text-gray-500">$</span>
+                            <input type="number" step="0.01" value="${item.precio}" min="0" onchange="actualizarPrecioUnitarioDirecto(${item.id}, Number(this.value))" 
+                                class="bg-transparent border border-transparent hover:border-gray-700 focus:border-rose-500 rounded px-2 py-1 w-20 text-right text-gray-300 transition-all outline-none">
+                        </div>
+                    </td>
+                    <td class="py-3 px-3 text-right font-bold text-purple-400">
+                        $${Number(totalValor).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </td>
+                    <td class="py-3 px-5 text-center">
+                        <button onclick="solicitarPinEliminarArticulo(${item.id})" class="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-950/30 transition-all" title="Eliminar Artículo">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarEntradas() {
+            const tbody = document.getElementById('tabla-entradas-body');
+            tbody.innerHTML = '';
+            const filtro = document.getElementById('inputBuscarEntradas').value.toLowerCase();
+
+            const filtradas = entradas.filter(e => e.articulo.toLowerCase().includes(filtro) || e.fecha.toLowerCase().includes(filtro));
+
+            if (filtradas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500 italic">No hay registros de entradas.</td></tr>`;
+                return;
+            }
+
+            const agrupadas = {};
+            filtradas.forEach(ent => {
+                const fechaKey = ent.fecha;
+                if (!agrupadas[fechaKey]) agrupadas[fechaKey] = [];
+                agrupadas[fechaKey].push(ent);
+            });
+
+            // Ordenar las fechas cronológicamente en orden descendente (más reciente primero)
+            const fechasOrdenadas = Object.keys(agrupadas).sort((a, b) => {
+                const [dA, mA, yA] = a.split('/').map(Number);
+                const [dB, mB, yB] = b.split('/').map(Number);
+                return new Date(yB, mB - 1, dB) - new Date(yA, mA - 1, dA);
+            });
+
+            fechasOrdenadas.forEach(fecha => {
+                const lista = agrupadas[fecha];
+
+                const headerTr = document.createElement('tr');
+                headerTr.className = "bg-[#0d1320] border-t border-b border-gray-800";
+                headerTr.innerHTML = `
+                    <td colspan="6" class="py-2.5 px-6 font-semibold text-emerald-400 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day"></i> Día de Entrada: ${fecha} (${lista.length} registros)
+                    </td>
+                `;
+                tbody.appendChild(headerTr);
+
+                lista.forEach(ent => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-[#161f31]/60 transition-colors";
+                    tr.innerHTML = `
+                        <td class="py-3 px-6 text-gray-400 text-xs">${ent.fecha}</td>
+                        <td class="py-3 px-4 font-medium text-white">${ent.articulo}</td>
+                        <td class="py-3 px-4 text-center font-bold text-emerald-400">+${ent.cantidad}</td>
+                        <td class="py-3 px-4 text-right text-gray-300">$${Number(ent.costo).toFixed(2)}</td>
+                        <td class="py-3 px-4 text-right font-bold text-emerald-400">$${(ent.cantidad * ent.costo).toFixed(2)}</td>
+                        <td class="py-3 px-6 text-center flex items-center justify-center gap-2">
+                            <button onclick="abrirModalEditarEntrada(${ent.id})" class="text-gray-400 hover:text-emerald-400 p-1.5 rounded-lg hover:bg-emerald-950/30 transition-all" title="Editar Entrada"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="solicitarPinEliminarEntrada(${ent.id})" class="text-gray-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-950/30 transition-all" title="Eliminar Entrada"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function renderizarSalidas() {
+            const tbody = document.getElementById('tabla-salidas-body');
+            tbody.innerHTML = '';
+            const filtro = document.getElementById('inputBuscarSalidas').value.toLowerCase();
+
+            const filtradas = salidas.filter(s => s.articulo.toLowerCase().includes(filtro) || s.fecha.toLowerCase().includes(filtro) || (s.area && s.area.toLowerCase().includes(filtro)));
+
+            if (filtradas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500 italic">No hay registros de salidas.</td></tr>`;
+                return;
+            }
+
+            const agrupadas = {};
+            filtradas.forEach(sal => {
+                const fechaKey = sal.fecha;
+                if (!agrupadas[fechaKey]) agrupadas[fechaKey] = [];
+                agrupadas[fechaKey].push(sal);
+            });
+
+            // Ordenar las fechas cronológicamente en orden descendente (más reciente primero)
+            const fechasOrdenadas = Object.keys(agrupadas).sort((a, b) => {
+                const [dA, mA, yA] = a.split('/').map(Number);
+                const [dB, mB, yB] = b.split('/').map(Number);
+                return new Date(yB, mB - 1, dB) - new Date(yA, mA - 1, dA);
+            });
+
+            fechasOrdenadas.forEach(fecha => {
+                const lista = agrupadas[fecha];
+
+                const headerTr = document.createElement('tr');
+                headerTr.className = "bg-[#0d1320] border-t border-b border-gray-800";
+                headerTr.innerHTML = `
+                    <td colspan="5" class="py-2.5 px-6 font-semibold text-amber-400 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day"></i> Día de Salida: ${fecha} (${lista.length} registros)
+                    </td>
+                `;
+                tbody.appendChild(headerTr);
+
+                lista.forEach(sal => {
+                    let areaBadge = '';
+                    if (sal.esSucursal) {
+                        areaBadge = `<span class="bg-purple-950/60 text-purple-300 border border-purple-800/50 px-2.5 py-0.5 rounded text-xs font-semibold"><i class="fa-solid fa-store mr-1"></i> Sucursal: ${sal.area}</span>`;
+                    } else {
+                        areaBadge = `<span class="bg-amber-950/60 text-amber-300 border border-amber-800/50 px-2.5 py-0.5 rounded text-xs font-semibold">${sal.area}</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-[#161f31]/60 transition-colors";
+                    tr.innerHTML = `
+                        <td class="py-3 px-6 text-gray-400 text-xs">${sal.fecha}</td>
+                        <td class="py-3 px-4 font-medium text-white">${sal.articulo}</td>
+                        <td class="py-3 px-4 text-center font-bold text-amber-400">-${sal.cantidad}</td>
+                        <td class="py-3 px-4 text-gray-300">
+                            ${areaBadge}
+                        </td>
+                        <td class="py-3 px-6 text-center flex items-center justify-center gap-2">
+                            <button onclick="abrirModalEditarSalida(${sal.id})" class="text-gray-400 hover:text-amber-400 p-1.5 rounded-lg hover:bg-amber-950/30 transition-all" title="Editar Salida"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="solicitarPinEliminarSalida(${sal.id})" class="text-gray-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-950/30 transition-all" title="Eliminar Salida"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function actualizarMetricas() {
+            const totalReferencias = inventario.length;
+            const stockTotal = inventario.reduce((acc, item) => {
+                const nombreItem = item.nombre.trim().toUpperCase();
+                const tCompras = entradas.filter(e => e.articulo.trim().toUpperCase() === nombreItem).reduce((a, c) => a + Number(c.cantidad), 0);
+                const tSalidas = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem).reduce((a, c) => a + Number(c.cantidad), 0);
+                const inicio = item.inicioMes !== undefined ? Number(item.inicioMes) : 0;
+                const stockVal = item.stock !== undefined ? Number(item.stock) : (inicio + tCompras - tSalidas);
+                return acc + stockVal;
+            }, 0);
+
+            const valorTotal = inventario.reduce((acc, item) => {
+                const nombreItem = item.nombre.trim().toUpperCase();
+                const tCompras = entradas.filter(e => e.articulo.trim().toUpperCase() === nombreItem).reduce((a, c) => a + Number(c.cantidad), 0);
+                const tSalidas = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem).reduce((a, c) => a + Number(c.cantidad), 0);
+                const inicio = item.inicioMes !== undefined ? Number(item.inicioMes) : 0;
+                const stockVal = item.stock !== undefined ? Number(item.stock) : (inicio + tCompras - tSalidas);
+                return acc + (stockVal * Number(item.precio));
+            }, 0);
+
+            document.getElementById('stat-referencias').innerText = totalReferencias;
+            document.getElementById('stat-stock').innerText = stockTotal.toLocaleString();
+            document.getElementById('stat-valor').innerText = `$${valorTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        function poblarFiltrosYSelects() {
+            actualizarDropdownEntrada(inventario);
+            actualizarDropdownSalida(inventario);
+            
+            const hoy = new Date().toISOString().split('T')[0];
+            const fechaEntradaInput = document.getElementById('entradaFechaInput');
+            if(fechaEntradaInput) fechaEntradaInput.value = hoy;
+
+            const fechaSalidaInput = document.getElementById('salidaFechaInput');
+            if(fechaSalidaInput) fechaSalidaInput.value = hoy;
+
+            const nuevoFechaInput = document.getElementById('nuevoFechaEntrada');
+            if(nuevoFechaInput) nuevoFechaInput.value = hoy;
+        }
+
+        function actualizarCostoEntrada(id) {
+            const item = inventario.find(i => i.id === Number(id));
+            const inputCosto = document.getElementById('entradaCosto');
+            if (item && inputCosto) {
+                inputCosto.value = Number(item.precio).toFixed(2);
+            }
+        }
+
+        function actualizarDropdownEntrada(listaArticulos) {
+            const dropdown = document.getElementById('dropdownEntradaList');
+            if (!dropdown) return;
+            dropdown.innerHTML = '';
+            
+            if (listaArticulos.length === 0) {
+                dropdown.innerHTML = `<div class="px-4 py-3 text-xs text-gray-500 italic">No se encontraron artículos</div>`;
+                return;
+            }
+
+            listaArticulos.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "px-4 py-2.5 text-sm text-white hover:bg-emerald-950/40 cursor-pointer flex items-center justify-between transition-colors";
+                div.innerHTML = `
+                    <span class="font-medium">${item.nombre}</span>
+                    <span class="text-xs bg-gray-800 text-gray-300 border border-gray-700 px-2 py-0.5 rounded-md">Stock: ${item.stock}</span>
+                `;
+                div.onmousedown = (e) => {
+                    e.preventDefault();
+                    seleccionarArticuloEntrada(item);
+                };
+                dropdown.appendChild(div);
+            });
+        }
+
+        function seleccionarArticuloEntrada(item) {
+            document.getElementById('busquedaEntradaInput').value = `${item.nombre}`;
+            document.getElementById('entradaArticuloId').value = item.id;
+            actualizarCostoEntrada(item.id);
+            ocultarDropdowns();
+        }
+
+        function filtrarArticulosEntrada() {
+            const texto = document.getElementById('busquedaEntradaInput').value.toLowerCase();
+            const filtrados = inventario.filter(item => item.nombre.toLowerCase().includes(texto));
+            actualizarDropdownEntrada(filtrados);
+            mostrarDropdownEntrada();
+        }
+
+        function mostrarDropdownEntrada() {
+            document.getElementById('dropdownEntradaList').classList.remove('hidden');
+        }
+
+        function actualizarDropdownSalida(listaArticulos) {
+            const dropdown = document.getElementById('dropdownSalidaList');
+            if (!dropdown) return;
+            dropdown.innerHTML = '';
+
+            if (listaArticulos.length === 0) {
+                dropdown.innerHTML = `<div class="px-4 py-3 text-xs text-gray-500 italic">No se encontraron artículos</div>`;
+                return;
+            }
+
+            listaArticulos.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "px-4 py-2.5 text-sm text-white hover:bg-amber-950/40 cursor-pointer flex items-center justify-between transition-colors";
+                div.innerHTML = `
+                    <span class="font-medium">${item.nombre}</span>
+                    <span class="text-xs bg-gray-800 text-gray-300 border border-gray-700 px-2 py-0.5 rounded-md">Stock: ${item.stock}</span>
+                `;
+                div.onmousedown = (e) => {
+                    e.preventDefault();
+                    seleccionarArticuloSalida(item);
+                };
+                dropdown.appendChild(div);
+            });
+        }
+
+        function seleccionarArticuloSalida(item) {
+            document.getElementById('busquedaSalidaInput').value = `${item.nombre}`;
+            document.getElementById('salidaArticuloId').value = item.id;
+            ocultarDropdowns();
+        }
+
+        function filtrarArticulosSalida() {
+            const texto = document.getElementById('busquedaSalidaInput').value.toLowerCase();
+            const filtrados = inventario.filter(item => item.nombre.toLowerCase().includes(texto));
+            actualizarDropdownSalida(filtrados);
+            mostrarDropdownSalida();
+        }
+
+        function mostrarDropdownSalida() {
+            document.getElementById('dropdownSalidaList').classList.remove('hidden');
+        }
+
+        function ocultarDropdowns() {
+            const d1 = document.getElementById('dropdownEntradaList');
+            const d2 = document.getElementById('dropdownSalidaList');
+            if(d1) d1.classList.add('hidden');
+            if(d2) d2.classList.add('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                ocultarDropdowns();
+            }
+        });
+
+        function abrirModalPin(descripcion, callback) {
+            const descripcionLimpia = descripcion.replace(/\s*\(\d+\)/g, '');
+            document.getElementById('pinDescripcion').innerText = descripcionLimpia;
+            document.getElementById('inputPin').value = '';
+            pinCallback = callback;
+            openModal('modalPin');
+            setTimeout(() => document.getElementById('inputPin').focus(), 100);
+        }
+
+        function verificarPin(e) {
+            e.preventDefault();
+            const pinIngresado = document.getElementById('inputPin').value;
+            if (pinIngresado === PIN_SECRETO) {
+                closeModal('modalPin');
+                if (pinCallback) pinCallback();
+                mostrarToast("Acceso Autorizado", "PIN correcto. Acción completada.", "emerald");
+            } else {
+                mostrarToast("PIN Incorrecto", "El código ingresado no es válido (Pruebe 1324).", "rose");
+                document.getElementById('inputPin').value = '';
+                document.getElementById('inputPin').focus();
+            }
+        }
+
+        function abrirModalEditarEntrada(id) {
+            const ent = entradas.find(e => e.id === id);
+            if (!ent) return;
+            document.getElementById('editEntradaId').value = ent.id;
+            document.getElementById('editEntradaArticulo').value = ent.articulo;
+            document.getElementById('editEntradaCantidad').value = ent.cantidad;
+            document.getElementById('editEntradaCosto').value = ent.costo;
+            document.getElementById('editEntradaFecha').value = ent.fecha;
+            openModal('modalEditarEntrada');
+        }
+
+        function guardarEdicionEntrada(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('editEntradaId').value);
+            const cantidad = Number(document.getElementById('editEntradaCantidad').value);
+            const costo = Number(document.getElementById('editEntradaCosto').value);
+            const fecha = document.getElementById('editEntradaFecha').value;
+
+            abrirModalPin("Ingrese el PIN de seguridad para guardar los cambios en esta entrada:", () => {
+                const ent = entradas.find(e => e.id === id);
+                if (ent) {
+                    ent.cantidad = cantidad;
+                    ent.costo = costo;
+                    ent.fecha = fecha;
+                    guardarEnLocalStorage();
+                    renderizarEntradas();
+                    renderizarInventario();
+                    actualizarMetricas();
+                    closeModal('modalEditarEntrada');
+                    mostrarToast("Entrada Actualizada", "Los cambios se guardaron correctamente.", "emerald");
+                }
+            });
+        }
+
+        function toggleTipoSalidaDestino() {
+            const tipo = document.getElementById('tipoSalidaSelect').value;
+            const grupoArea = document.getElementById('grupoAreaInterna');
+            const grupoSuc = document.getElementById('grupoSucursal');
+            if (tipo === 'SUCURSAL') {
+                grupoArea.classList.add('hidden');
+                grupoSuc.classList.remove('hidden');
+            } else {
+                grupoArea.classList.remove('hidden');
+                grupoSuc.classList.add('hidden');
+            }
+        }
+
+        function toggleEditTipoSalidaDestino() {
+            const tipo = document.getElementById('editTipoSalidaSelect').value;
+            const grupoArea = document.getElementById('editGrupoAreaInterna');
+            const grupoSuc = document.getElementById('editGrupoSucursal');
+            if (tipo === 'SUCURSAL') {
+                grupoArea.classList.add('hidden');
+                grupoSuc.classList.remove('hidden');
+            } else {
+                grupoArea.classList.remove('hidden');
+                grupoSuc.classList.add('hidden');
+            }
+        }
+
+        function abrirModalEditarSalida(id) {
+            const sal = salidas.find(s => s.id === id);
+            if (!sal) return;
+            document.getElementById('editSalidaId').value = sal.id;
+            document.getElementById('editSalidaArticulo').value = sal.articulo;
+            document.getElementById('editSalidaCantidad').value = sal.cantidad;
+            document.getElementById('editSalidaFecha').value = sal.fecha;
+
+            const tipoSel = document.getElementById('editTipoSalidaSelect');
+            if (sal.esSucursal) {
+                tipoSel.value = 'SUCURSAL';
+                document.getElementById('editSalidaSucursal').value = sal.area || 'Merkadito';
+                toggleEditTipoSalidaDestino();
+            } else {
+                tipoSel.value = 'AREA';
+                document.getElementById('editSalidaArea').value = sal.area || 'COCINA';
+                toggleEditTipoSalidaDestino();
+            }
+
+            openModal('modalEditarSalida');
+        }
+
+        function guardarEdicionSalida(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('editSalidaId').value);
+            const cantidad = Number(document.getElementById('editSalidaCantidad').value);
+            const tipoSalida = document.getElementById('editTipoSalidaSelect').value;
+            let areaDestino = '';
+            let esSucursal = false;
+
+            if (tipoSalida === 'SUCURSAL') {
+                areaDestino = document.getElementById('editSalidaSucursal').value;
+                esSucursal = true;
+            } else {
+                areaDestino = document.getElementById('editSalidaArea').value;
+                esSucursal = false;
+            }
+
+            const fecha = document.getElementById('editSalidaFecha').value;
+
+            abrirModalPin("Ingrese el PIN de seguridad para guardar los cambios en esta salida:", () => {
+                const sal = salidas.find(s => s.id === id);
+                if (sal) {
+                    sal.cantidad = cantidad;
+                    sal.area = areaDestino;
+                    sal.esSucursal = esSucursal;
+                    sal.fecha = fecha;
+                    guardarEnLocalStorage();
+                    renderizarSalidas();
+                    renderizarInventario();
+                    actualizarMetricas();
+                    closeModal('modalEditarSalida');
+                    mostrarToast("Salida Actualizada", "Los cambios se guardaron correctamente.", "emerald");
+                }
+            });
+        }
+
+        function abrirModalEditarNombre(id) {
+            const item = inventario.find(i => i.id === id);
+            if (!item) return;
+            document.getElementById('editArticuloId').value = item.id;
+            document.getElementById('editArticuloNombreInput').value = item.nombre;
+            openModal('modalEditarNombreArticulo');
+        }
+
+        function guardarNombreArticuloConPin(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('editArticuloId').value);
+            const nuevoNombre = document.getElementById('editArticuloNombreInput').value.trim().toUpperCase();
+
+            abrirModalPin("Ingrese el PIN de seguridad para actualizar el nombre del artículo:", () => {
+                const item = inventario.find(i => i.id === id);
+                if (item) {
+                    const nombreAnterior = item.nombre;
+                    item.nombre = nuevoNombre;
+
+                    entradas.forEach(ent => {
+                        if (ent.articulo.trim().toUpperCase() === nombreAnterior.trim().toUpperCase()) {
+                            ent.articulo = nuevoNombre;
+                        }
+                    });
+                    salidas.forEach(sal => {
+                        if (sal.articulo.trim().toUpperCase() === nombreAnterior.trim().toUpperCase()) {
+                            sal.articulo = nuevoNombre;
+                        }
+                    });
+
+                    guardarEnLocalStorage();
+                    renderizarTodo();
+                    closeModal('modalEditarNombreArticulo');
+                    mostrarToast("Nombre Actualizado", "El nombre del artículo ha sido modificado.", "emerald");
+                }
+            });
+        }
+
+        let tempEditData = null;
+
+        function solicitarPinEdicionArticulo(id, campo, valor, inputEl) {
+            const valorAnterior = inventario.find(i => i.id === id)[campo];
+            tempEditData = { id, campo, valor, inputEl, valorAnterior };
+            
+            abrirModalPin("Ingrese el PIN de seguridad para modificar el inventario:", () => {
+                const item = inventario.find(i => i.id === tempEditData.id);
+                if (item) {
+                    item[tempEditData.campo] = tempEditData.valor;
+                    guardarEnLocalStorage();
+                    renderizarInventario(inventario);
+                    actualizarMetricas();
+                    mostrarToast("Modificado", "Cambio guardado con éxito.", "emerald");
+                }
+            });
+
+            if (inputEl) inputEl.value = valorAnterior;
+        }
+
+        function actualizarInicioMesDirecto(id, nuevoValor) {
+            const item = inventario.find(i => i.id === id);
+            if (item) {
+                item.inicioMes = nuevoValor;
+                guardarEnLocalStorage();
+                renderizarInventario(inventario);
+                actualizarMetricas();
+                mostrarToast("Inicio de Mes Actualizado", "El valor inicial se ha guardado correctamente.", "emerald");
+            }
+        }
+
+        function actualizarPrecioUnitarioDirecto(id, nuevoPrecio) {
+            const item = inventario.find(i => i.id === id);
+            if (item) {
+                item.precio = nuevoPrecio;
+                guardarEnLocalStorage();
+                renderizarInventario(inventario);
+                actualizarMetricas();
+                mostrarToast("Precio Unitario Actualizado", "El precio se ha guardado correctamente.", "emerald");
+            }
+        }
+
+        function solicitarPinEliminarArticulo(id) {
+            abrirModalPin("Ingrese el PIN de seguridad para eliminar este artículo:", () => {
+                inventario = inventario.filter(i => i.id !== id);
+                guardarEnLocalStorage();
+                renderizarTodo();
+                mostrarToast("Artículo Eliminado", "El elemento ha sido removido.", "rose");
+            });
+        }
+
+        function solicitarPinEliminarEntrada(id) {
+            abrirModalPin("Ingrese el PIN de seguridad para eliminar este registro de entrada:", () => {
+                entradas = entradas.filter(e => e.id !== id);
+                guardarEnLocalStorage();
+                renderizarEntradas();
+                renderizarInventario();
+                actualizarMetricas();
+                mostrarToast("Entrada Eliminada", "Registro borrado correctamente.", "rose");
+            });
+        }
+
+        function limpiarEntradasConPin() {
+            abrirModalPin("PIN requerido para VACIAR TODO el historial de entradas:", () => {
+                entradas = [];
+                guardarEnLocalStorage();
+                renderizarEntradas();
+                renderizarInventario();
+                actualizarMetricas();
+                mostrarToast("Historial Limpio", "Se borraron todas las entradas.", "rose");
+            });
+        }
+
+        function solicitarPinEliminarSalida(id) {
+            abrirModalPin("Ingrese el PIN de seguridad para eliminar este registro de salida:", () => {
+                const salidaAEliminar = salidas.find(s => s.id === id);
+                if (salidaAEliminar) {
+                    const item = inventario.find(i => i.nombre.trim().toUpperCase() === salidaAEliminar.articulo.trim().toUpperCase());
+                    if (item) {
+                        item.stock += Number(salidaAEliminar.cantidad);
+                    }
+                }
+                salidas = salidas.filter(s => s.id !== id);
+                guardarEnLocalStorage();
+                renderizarSalidas();
+                renderizarInventario();
+                actualizarMetricas();
+                mostrarToast("Salida Eliminada", "Registro borrado y stock devuelto al inventario.", "emerald");
+            });
+        }
+
+        function limpiarSalidasConPin() {
+            abrirModalPin("PIN requerido para VACIAR TODO el historial de salidas:", () => {
+                salidas.forEach(sal => {
+                    const item = inventario.find(i => i.nombre.trim().toUpperCase() === sal.articulo.trim().toUpperCase());
+                    if (item) {
+                        item.stock += Number(sal.cantidad);
+                    }
+                });
+                salidas = [];
+                guardarEnLocalStorage();
+                renderizarSalidas();
+                renderizarInventario();
+                actualizarMetricas();
+                mostrarToast("Historial Limpio", "Se borraron las salidas y se restableció el stock.", "emerald");
+            });
+        }
+
+        function filtrarInventario() {
+            const query = document.getElementById('inputBuscar').value.toLowerCase();
+            const filtrados = inventario.filter(item => item.nombre.toLowerCase().includes(query));
+            renderizarInventario(filtrados);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function guardarNuevoArticulo(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nuevoNombre').value.trim().toUpperCase();
+            const udm = document.getElementById('nuevoUdm').value;
+            const inicioMes = Number(document.getElementById('nuevoInicioMes').value);
+            const stock = Number(document.getElementById('nuevoStock').value);
+            const precio = Number(document.getElementById('nuevoPrecio').value);
+            const fechaInputVal = document.getElementById('nuevoFechaEntrada').value;
+
+            const nuevoId = inventario.length > 0 ? Math.max(...inventario.map(i => i.id)) + 1 : 1;
+            inventario.push({ id: nuevoId, nombre, udm, inicioMes, stock, precio });
+            
+            let fechaStr = new Date().toLocaleDateString();
+            if (fechaInputVal) {
+                const partes = fechaInputVal.split('-');
+                if (partes.length === 3) {
+                    fechaStr = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+            }
+
+            const entradaId = entradas.length > 0 ? Math.max(...entradas.map(e => e.id)) + 1 : 101;
+            entradas.push({ id: entradaId, fecha: fechaStr, articulo: nombre, cantidad: stock, costo: precio });
+
+            guardarEnLocalStorage();
+            renderizarTodo();
+            closeModal('modalNuevoArticulo');
+            mostrarToast("Artículo Creado", `Se añadió ${nombre} (${udm}) al inventario con éxito.`, "emerald");
+            e.target.reset();
+            const hoy = new Date().toISOString().split('T')[0];
+            const nuevoFechaInput = document.getElementById('nuevoFechaEntrada');
+            if(nuevoFechaInput) nuevoFechaInput.value = hoy;
+        }
+
+        function registrarEntradaStock(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('entradaArticuloId').value);
+            const cantidad = Number(document.getElementById('entradaCantidad').value);
+            const fechaInputVal = document.getElementById('entradaFechaInput').value;
+
+            if (!id) {
+                mostrarToast("Seleccione Artículo", "Por favor seleccione un artículo de la lista desplegable.", "rose");
+                return;
+            }
+
+            const item = inventario.find(i => i.id === id);
+            if (item) {
+                item.stock += cantidad;
+                const costoFijo = Number(item.precio);
+
+                let fechaStr = new Date().toLocaleDateString();
+                if (fechaInputVal) {
+                    const partes = fechaInputVal.split('-');
+                    if (partes.length === 3) {
+                        fechaStr = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    }
+                }
+
+                const entradaId = entradas.length > 0 ? Math.max(...entradas.map(e => e.id)) + 1 : 101;
+                entradas.push({ 
+                    id: entradaId, 
+                    fecha: fechaStr, 
+                    articulo: item.nombre, 
+                    cantidad, 
+                    costo: costoFijo 
+                });
+
+                guardarEnLocalStorage();
+                renderizarTodo();
+                closeModal('modalEntrada');
+                document.getElementById('busquedaEntradaInput').value = '';
+                document.getElementById('entradaArticuloId').value = '';
+                mostrarToast("Entrada Registrada", `Se añadieron ${cantidad} unidades de ${item.nombre}.`, "emerald");
+            }
+        }
+
+        function registrarSalidaStock(e) {
+            e.preventDefault();
+            const id = Number(document.getElementById('salidaArticuloId').value);
+            const cantidad = Number(document.getElementById('salidaCantidad').value);
+            const tipoSalida = document.getElementById('tipoSalidaSelect').value;
+            
+            let areaDestino = '';
+            let esSucursal = false;
+
+            if (tipoSalida === 'SUCURSAL') {
+                areaDestino = document.getElementById('salidaSucursal').value;
+                esSucursal = true;
+            } else {
+                areaDestino = document.getElementById('salidaArea').value;
+                esSucursal = false;
+            }
+
+            const fechaInputVal = document.getElementById('salidaFechaInput').value;
+
+            if (!id) {
+                mostrarToast("Seleccione Artículo", "Por favor seleccione un artículo de la lista desplegable.", "rose");
+                return;
+            }
+
+            const item = inventario.find(i => i.id === id);
+            if (item) {
+                if (item.stock < cantidad) {
+                    mostrarToast("Stock Insuficiente", `No hay suficientes unidades de ${item.nombre}. Stock actual: ${item.stock}`, "rose");
+                    return;
+                }
+                item.stock -= cantidad;
+
+                let fechaStr = new Date().toLocaleDateString();
+                if (fechaInputVal) {
+                    const partes = fechaInputVal.split('-');
+                    if (partes.length === 3) {
+                        fechaStr = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    }
+                }
+
+                const salidaId = salidas.length > 0 ? Math.max(...salidas.map(s => s.id)) + 1 : 201;
+                salidas.push({ 
+                    id: salidaId, 
+                    fecha: fechaStr, 
+                    articulo: item.nombre, 
+                    cantidad, 
+                    area: areaDestino,
+                    esSucursal: esSucursal
+                });
+
+                guardarEnLocalStorage();
+                renderizarTodo();
+                closeModal('modalSalida');
+                document.getElementById('busquedaSalidaInput').value = '';
+                document.getElementById('salidaArticuloId').value = '';
+                
+                const mensajeToast = esSucursal ? `Se enviaron ${cantidad} unidades de ${item.nombre} a la sucursal [${areaDestino}].` : `Se retiraron ${cantidad} unidades de ${item.nombre} para el área [${areaDestino}].`;
+                mostrarToast("Salida Registrada", mensajeToast, "amber");
+            }
+        }
+
+        function reiniciarDatos() {
+            abrirModalPin("PIN requerido para reiniciar el inventario a valores por defecto:", () => {
+                inventario = JSON.parse(JSON.stringify(datosIniciales));
+                entradas = [];
+                salidas = [];
+                guardarEnLocalStorage();
+                renderizarTodo();
+                mostrarToast("Datos Reiniciados", "Se restauró el inventario original.", "emerald");
+            });
+        }
+
+        function eliminarTodoInventarioConPin() {
+            abrirModalPin("PIN requerido para ELIMINAR COMPLETAMENTE todos los artículos del inventario:", () => {
+                inventario = [];
+                entradas = [];
+                salidas = [];
+                guardarEnLocalStorage();
+                renderizarTodo();
+                mostrarToast("Inventario Vaciado", "Se han eliminado todos los artículos e historiales.", "rose");
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+
+            ['inventario', 'entradas', 'salidas'].forEach(t => {
+                const btn = document.getElementById(`btn-tab-${t}`);
+                if (t === tabName) {
+                    btn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-rose-600 text-white shadow-lg shadow-rose-900/30 transition-all hover:bg-rose-500";
+                } else {
+                    btn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#1f2937] text-gray-300 hover:bg-[#374151] transition-all border border-gray-700";
+                }
+            });
+        }
+
+        function exportarExcel() {
+            let csv = "NOMBRE,UDM,INICIO DE MES,COMPRAS (TOTALES),SALIDAS TOTALES,SALIDAS COCINA,SALIDAS BARRA,SALIDAS LOZA/PISO,SALIDAS SUCURSALES (MERKADITO/PUNTA CORCHO/BUBA),STOCK ACTUAL (EXISTENCIAS),PRECIO UNIT.,TOTAL VALOR\n";
+            
+            inventario.forEach(i => {
+                const nombreItem = i.nombre.trim().toUpperCase();
+                const udmVal = i.udm || 'PIEZA';
+                const tCompras = entradas.filter(e => e.articulo.trim().toUpperCase() === nombreItem).reduce((a, c) => a + Number(c.cantidad), 0);
+                
+                const sCocina = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && (s.area || '').toUpperCase() === 'COCINA').reduce((a, c) => a + Number(c.cantidad), 0);
+                const sBarra = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && (s.area || '').toUpperCase() === 'BARRA').reduce((a, c) => a + Number(c.cantidad), 0);
+                const sLoza = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem && !s.esSucursal && ((s.area || '').toUpperCase() === 'LOZA/PISO' || (s.area || '').toUpperCase() === 'LOZA' || (s.area || '').toUpperCase() === 'PISO')).reduce((a, c) => a + Number(c.cantidad), 0);
+                const sSucursales = salidas.filter(s => s.articulo.trim().toUpperCase() === nombreItem && s.esSucursal).reduce((a, c) => a + Number(c.cantidad), 0);
+                
+                const tSalidas = sCocina + sBarra + sLoza + sSucursales;
+                const inicio = i.inicioMes !== undefined ? Number(i.inicioMes) : 0;
+                const stockVal = i.stock !== undefined ? Number(i.stock) : (inicio + tCompras - tSalidas);
+                
+                csv += `"${i.nombre}",${udmVal},${inicio},${tCompras},${tSalidas},${sCocina},${sBarra},${sLoza},${sSucursales},${stockVal},${i.precio},${(stockVal * i.precio).toFixed(2)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "inventario_abarrotes_udm.csv";
+            link.click();
+            mostrarToast("Exportación Exitosa", "Se ha descargado el archivo CSV con la columna UDM.", "emerald");
+        }
+
+        function importarCSV(event) {
+            const archivo = event.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                try {
+                    const contenido = e.target.result;
+                    const lineas = contenido.split(/\r\n|\n/);
+                    
+                    if (lineas.length < 2) {
+                        mostrarToast("Archivo Vacío", "El archivo CSV no contiene registros suficientes.", "rose");
+                        return;
+                    }
+
+                    abrirModalPin("PIN requerido para importar y fusionar o reemplazar los datos del CSV:", () => {
+                        let nuevosArticulos = [];
+                        let idMax = inventario.length > 0 ? Math.max(...inventario.map(i => i.id)) : 0;
+
+                        const primeraLinea = lineas[0];
+                        const delimitador = primeraLinea.includes(';') ? ';' : ',';
+
+                        for (let i = 1; i < lineas.length; i++) {
+                            const linea = lineas[i].trim();
+                            if (!linea) continue;
+
+                            const columnas = [];
+                            let enComillas = false;
+                            let buffer = '';
+                            for (let char of linea) {
+                                if (char === '"') {
+                                    enComillas = !enComillas;
+                                } else if (char === delimitador && !enComillas) {
+                                    columnas.push(buffer.trim().replace(/^"|"$/g, ''));
+                                    buffer = '';
+                                } else {
+                                    buffer += char;
+                                }
+                            }
+                            columnas.push(buffer.trim().replace(/^"|"$/g, ''));
+
+                            if (columnas.length >= 2) {
+                                const nombre = columnas[0].toUpperCase();
+                                if (!nombre) continue;
+
+                                let udm = "PIEZA";
+                                let inicioMes = 0;
+                                let precio = 0.00;
+
+                                if (columnas.length >= 11) {
+                                    udm = columnas[1] ? columnas[1].toUpperCase() : "PIEZA";
+                                    inicioMes = Number(columnas[2]) || 0;
+                                    precio = Number(columnas[10]) || 0;
+                                } else if (columnas.length >= 7) {
+                                    if (isNaN(Number(columnas[1])) && columnas[1].length > 0) {
+                                        udm = columnas[1].toUpperCase();
+                                        inicioMes = Number(columnas[2]) || 0;
+                                    } else {
+                                        inicioMes = Number(columnas[1]) || 0;
+                                    }
+                                    for (let c = columnas.length - 1; c >= 2; c--) {
+                                        let valNum = Number(columnas[c]);
+                                        if (!isNaN(valNum) && valNum > 0 && c >= 5) {
+                                            precio = valNum;
+                                            break;
+                                        }
+                                    }
+                                    if (!precio || precio === 0) {
+                                        precio = Number(columnas[columnas.length - 2]) || Number(columnas[columnas.length - 1]) || 0.00;
+                                    }
+                                } else if (columnas.length >= 3) {
+                                    if (isNaN(Number(columnas[1])) && columnas[1].length > 0) {
+                                        udm = columnas[1].toUpperCase();
+                                        inicioMes = Number(columnas[2]) || 0;
+                                        precio = Number(columnas[columnas.length - 1]) || 0.00;
+                                    } else {
+                                        inicioMes = Number(columnas[1]) || 0;
+                                        precio = Number(columnas[columnas.length - 1]) || 0.00;
+                                    }
+                                }
+
+                                let existente = inventario.find(inv => inv.nombre.trim().toUpperCase() === nombre);
+                                if (existente) {
+                                    existente.udm = udm;
+                                    existente.inicioMes = inicioMes;
+                                    if (!isNaN(precio) && precio > 0) {
+                                        existente.precio = precio;
+                                    }
+                                } else {
+                                    idMax++;
+                                    nuevosArticulos.push({
+                                        id: idMax,
+                                        nombre: nombre,
+                                        udm: udm,
+                                        inicioMes: inicioMes,
+                                        stock: inicioMes,
+                                        precio: (!isNaN(precio) && precio > 0) ? precio : 0.00
+                                    });
+                                }
+                            }
+                        }
+
+                        if (nuevosArticulos.length > 0) {
+                            inventario = inventario.concat(nuevosArticulos);
+                        }
+
+                        guardarEnLocalStorage();
+                        renderizarTodo();
+                        mostrarToast("Importación Exitosa", `Se han cargado y actualizado los artículos y precios reales desde su archivo.`, "emerald");
+                    });
+                } catch (err) {
+                    console.error(err);
+                    mostrarToast("Error de Importación", "No se pudo procesar el archivo CSV.", "rose");
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            lector.readAsText(archivo, 'UTF-8');
+        }
+
+        function mostrarToast(titulo, mensaje, color = "emerald") {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').innerText = titulo;
+            document.getElementById('toastMessage').innerText = mensaje;
+            
+            const icon = document.getElementById('toastIcon');
+            if(color === "rose") {
+                icon.className = "text-rose-400 text-lg";
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else if(color === "amber") {
+                icon.className = "text-amber-400 text-lg";
+                icon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            } else {
+                icon.className = "text-emerald-400 text-lg";
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
